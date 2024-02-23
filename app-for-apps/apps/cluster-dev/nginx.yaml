@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    occtech.io/preview: 'true'
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 2m0s
+  project: platform-enginner
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  info:
+    - name: 'Public ingress'
+      value: 'https://idp.occdeep.io/docs/ngninx'
+  source:
+    repoURL: ghcr.io/nginxinc/charts
+    chart: nginx-ingress 
+    targetRevision: 1.1.3
+    helm:
+      valuesObject:
+        replicaCount: 3
+        tolerations:
+        - key: "occtech.io/dedicated"
+          operator: "Equal"
+          value: "infra"
+          effect: "NoSchedule"
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                  - key: "occtech.io/dedicated"
+                    operator: In
+                    values:
+                      - "infra"

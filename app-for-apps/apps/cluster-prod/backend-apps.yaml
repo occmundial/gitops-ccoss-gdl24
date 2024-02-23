@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stormtrooper-frontend-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    occtech.io/preview: 'true'
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 2m0s
+  project: backend-engineers
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  info:
+    - name: 'Bootstrap to deploy apps'
+      value: 'https://idp.occdeep.io/docs/stromtooper'
+  source:
+    repoURL: https://github.com/occmundial/gitops-ccoss-gdl-24
+    targetRevision: main
+    path: apps-for-apps/apps/backend/environment/production
